@@ -2,8 +2,12 @@ package harverine
 
 import (
 	"bufio"
+	"encoding/json"
+	"fmt"
 	"io"
 	"os"
+
+	"github.com/pkg/errors"
 )
 
 type FileReader struct{}
@@ -29,7 +33,19 @@ func (r FileReader) ReadLines(path string) ([]string, error) {
 			break
 		}
 
-		lines = append(lines, string(l))
+		if js, ok := isValidJSON(l); ok {
+			lines = append(lines, js)
+		} else {
+			err := errors.New(fmt.Sprintf("Not valid json `%s`", js))
+			return nil, err
+		}
+
 	}
 	return lines, nil
+}
+
+func isValidJSON(s []byte) (string, bool) {
+	var js map[string]interface{}
+	castedStr := string(s)
+	return castedStr, json.Unmarshal([]byte(s), &js) == nil
 }
