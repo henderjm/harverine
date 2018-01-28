@@ -1,4 +1,4 @@
-package harverine
+package greatcircledistance
 
 import (
 	"bufio"

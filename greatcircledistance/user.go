@@ -1,4 +1,4 @@
-package harverine
+package greatcircledistance
 
 import (
 	"encoding/json"
@@ -16,15 +16,17 @@ type User struct {
 	Longitude string `json:"longitude, required"`
 }
 
-func createUser() User {
-	return User{}
-}
+type ByID []User
+
+func (a ByID) Len() int           { return len(a) }
+func (a ByID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByID) Less(i, j int) bool { return a[i].ID < a[j].ID }
 
 func CreateUsers(data []string) ([]User, error) {
 	var users []User
 	for _, d := range data {
 		u := User{}
-		err := json.Unmarshal([]byte(d), &u)
+		err := json.Unmarshal([]byte(d), &u) // This should never fail, caught in filereader if invalid.
 		if err != nil {
 			return nil, err
 		}
@@ -38,15 +40,20 @@ func CreateUsers(data []string) ([]User, error) {
 	return users, nil
 }
 
-func AmIInvited(fr *FileReader) ([]User, error) {
-	//var users []Users
-	//
-	//err := json.Unmarshal(data, &users)
-	//if err != nil {
-	//	return nil, err
-	//}
+func InviteUsers(users []User, maxDistance float64) ([]User, error) {
+	harversine := Harverine{}
+	var invitedUsers []User
+	for _, user := range users {
+		distanceFromOffice, err := harversine.CalculateGreatCircleDistance(OFFICE_LATITUDE, user.Latitude, OFFICE_LONGITUDE, user.Longitude)
+		if err != nil {
+			return nil, err
+		}
 
-	return []User{}, nil
+		if distanceFromOffice <= maxDistance {
+			invitedUsers = append(invitedUsers, user)
+		}
+	}
+	return invitedUsers, nil
 }
 
 func hasRequiredProperties(user User) (string, bool) {
